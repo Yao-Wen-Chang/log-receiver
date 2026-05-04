@@ -5,6 +5,7 @@
 #include <signal.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <time.h>
 
 #define DEFAULT_PORT  8080
 #define DEFAULT_FILE  "fan_control.log"
@@ -65,8 +66,23 @@ static void usage(const char *prog) {
 }
 
 int main(int argc, char *argv[]) {
-    int         port     = DEFAULT_PORT;
-    const char *log_path = DEFAULT_FILE;
+    time_t cur_time;
+    struct tm *info;
+    char log_path_buffer[64];
+    
+    /* Setup current time */
+    time(&cur_time);
+    setenv("TZ", "Asia/Taipei", 1);
+    tzset();
+    info = localtime(&cur_time);
+    strftime(log_path_buffer, sizeof(log_path_buffer), "%Y-%m-%d_%H:%M:%S_", info);
+    int buffer_len = strlen(log_path_buffer);
+    snprintf(log_path_buffer + buffer_len, sizeof(log_path_buffer) - buffer_len, "%s", DEFAULT_FILE);
+
+
+    int port = DEFAULT_PORT;
+    const char *log_path = log_path_buffer;
+    printf("Log will be saved to: %s\n", log_path);
 
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "--port") == 0 && i + 1 < argc)
